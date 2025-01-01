@@ -18,7 +18,7 @@
   - مجهز به تایمر برای پینگ خودکار و ذخیره نتایج.
 
 ## پیش‌نیازها
-- [چارچوب .NET Framework 4.7.2](https://dotnet.microsoft.com/en-us/download/dotnet-framework/net472)
+- [کتابخونه .NET Framework 4.7.2](https://dotnet.microsoft.com/en-us/download/dotnet-framework/net472)
 
 ## وابستگی‌ها
 - برنامه از کتابخانه `Newtonsoft.Json.dll` استفاده می‌کند که در پکیج ارائه شده است و نیازی به دانلود اضافی ندارد.
