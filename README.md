@@ -34,7 +34,7 @@ This program is designed to monitor the unstable state of the Iranian Internet a
 4. Access the connection history to review or copy logged information.
 
 ## License
-This program is open-source and available under the MIT [License](License.md).
+This program is open-source and available under the [MIT License](License.md).
 
 ## Contribution
 Feel free to fork the repository, make improvements, and submit pull requests!
