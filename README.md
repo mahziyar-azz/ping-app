@@ -1,3 +1,5 @@
+This project is also available in:
+- [Persian (فارسی)](README.fa.md)
 # Iranian Internet Monitor
 
 ## Overview
