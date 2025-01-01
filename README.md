@@ -1,7 +1,7 @@
 # Iranian Internet Monitor
 
 ## Overview
-This program is designed to monitor the unstable state of the Iranian Internet and inform users about the status of their network connection. It provides detailed information about connectivity to various URLs and logs the results for analysis.
+This program is designed to monitor the unstable state of the Iranian Internet and inform users about the status of their network connection. It provides detailed information about connectivity/VPN to various URLs and logs the results for analysis.
 
 ## Features
 - **Ping Monitoring**:
