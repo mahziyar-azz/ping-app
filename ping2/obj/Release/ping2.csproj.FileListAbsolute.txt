@@ -1,0 +1,15 @@
+C:\Users\Pc\source\repos\ping2\ping2\bin\Release\ping app.exe.config
+C:\Users\Pc\source\repos\ping2\ping2\bin\Release\ping app.exe.manifest
+C:\Users\Pc\source\repos\ping2\ping2\bin\Release\ping app.application
+C:\Users\Pc\source\repos\ping2\ping2\bin\Release\ping app.exe
+C:\Users\Pc\source\repos\ping2\ping2\bin\Release\ping app.pdb
+C:\Users\Pc\source\repos\ping2\ping2\obj\Release\ping2.csproj.AssemblyReference.cache
+C:\Users\Pc\source\repos\ping2\ping2\obj\Release\ping2.Properties.Resources.resources
+C:\Users\Pc\source\repos\ping2\ping2\obj\Release\ping2.csproj.GenerateResource.cache
+C:\Users\Pc\source\repos\ping2\ping2\obj\Release\ping2.csproj.CoreCompileInputs.cache
+C:\Users\Pc\source\repos\ping2\ping2\obj\Release\ping app.exe.manifest
+C:\Users\Pc\source\repos\ping2\ping2\obj\Release\ping app.application
+C:\Users\Pc\source\repos\ping2\ping2\obj\Release\ping app.exe
+C:\Users\Pc\source\repos\ping2\ping2\obj\Release\ping app.pdb
+C:\Users\Pc\source\repos\ping2\ping2\obj\Release\ping2.Form1.resources
+C:\Users\Pc\source\repos\ping2\ping2\obj\Release\ping2.DataGridViewForm.resources
