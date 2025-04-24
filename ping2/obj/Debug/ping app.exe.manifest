@@ -4,7 +4,7 @@
   <description asmv2:iconFile="icon ping app.ico" xmlns="urn:schemas-microsoft-com:asm.v1" />
   <application />
   <entryPoint>
-    <assemblyIdentity name="ping app" version="1.5.0.0" language="neutral" processorArchitecture="msil" />
+    <assemblyIdentity name="ping app" version="1.6.0.0" language="neutral" processorArchitecture="msil" />
     <commandLine file="ping app.exe" parameters="" />
   </entryPoint>
   <trustInfo>
@@ -43,14 +43,14 @@
     </dependentAssembly>
   </dependency>
   <dependency>
-    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="ping app.exe" size="939552">
-      <assemblyIdentity name="ping app" version="1.5.0.0" language="neutral" processorArchitecture="msil" />
+    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="ping app.exe" size="930848">
+      <assemblyIdentity name="ping app" version="1.6.0.0" language="neutral" processorArchitecture="msil" />
       <hash>
         <dsig:Transforms>
           <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
         </dsig:Transforms>
         <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />
-        <dsig:DigestValue>O/PC0pAhs7KNZ+GBeL1tOmbWJAJ0IQN1S90+nMe2YtY=</dsig:DigestValue>
+        <dsig:DigestValue>p0GsD2Qi1eqEvybkn+zLGOpS7NhQYxVqT18SrCxG64o=</dsig:DigestValue>
       </hash>
     </dependentAssembly>
   </dependency>

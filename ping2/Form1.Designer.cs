@@ -83,7 +83,7 @@
             this.label23 = new System.Windows.Forms.Label();
             this.ip_label = new System.Windows.Forms.Label();
             this.PictureBox1 = new System.Windows.Forms.PictureBox();
-            this.country_button = new System.Windows.Forms.Button();
+            this.Check_IP_button = new System.Windows.Forms.Button();
             this.label25 = new System.Windows.Forms.Label();
             this.label15 = new System.Windows.Forms.Label();
             this.label28 = new System.Windows.Forms.Label();
@@ -95,6 +95,8 @@
             this.useProxyCheckBox = new System.Windows.Forms.CheckBox();
             this.label24 = new System.Windows.Forms.Label();
             this.button1 = new System.Windows.Forms.Button();
+            this.Loading_Flag_label = new System.Windows.Forms.Label();
+            this.linkLabel1 = new System.Windows.Forms.LinkLabel();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -822,23 +824,24 @@
             // 
             // PictureBox1
             // 
-            this.PictureBox1.Location = new System.Drawing.Point(410, 320);
+            this.PictureBox1.Location = new System.Drawing.Point(410, 324);
             this.PictureBox1.Margin = new System.Windows.Forms.Padding(2);
             this.PictureBox1.Name = "PictureBox1";
-            this.PictureBox1.Size = new System.Drawing.Size(50, 34);
+            this.PictureBox1.Size = new System.Drawing.Size(40, 24);
+            this.PictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.PictureBox1.TabIndex = 56;
             this.PictureBox1.TabStop = false;
             // 
-            // country_button
+            // Check_IP_button
             // 
-            this.country_button.Location = new System.Drawing.Point(232, 325);
-            this.country_button.Margin = new System.Windows.Forms.Padding(2);
-            this.country_button.Name = "country_button";
-            this.country_button.Size = new System.Drawing.Size(62, 27);
-            this.country_button.TabIndex = 52;
-            this.country_button.Text = "Check IP";
-            this.country_button.UseVisualStyleBackColor = true;
-            this.country_button.Click += new System.EventHandler(this.country_button_Click);
+            this.Check_IP_button.Location = new System.Drawing.Point(232, 325);
+            this.Check_IP_button.Margin = new System.Windows.Forms.Padding(2);
+            this.Check_IP_button.Name = "Check_IP_button";
+            this.Check_IP_button.Size = new System.Drawing.Size(62, 27);
+            this.Check_IP_button.TabIndex = 52;
+            this.Check_IP_button.Text = "Check IP";
+            this.Check_IP_button.UseVisualStyleBackColor = true;
+            this.Check_IP_button.Click += new System.EventHandler(this.Check_IP_button_Click);
             // 
             // label25
             // 
@@ -848,7 +851,7 @@
             this.label25.Name = "label25";
             this.label25.Size = new System.Drawing.Size(60, 13);
             this.label25.TabIndex = 57;
-            this.label25.Text = "Version 1.5";
+            this.label25.Text = "Version 1.6";
             // 
             // label15
             // 
@@ -980,11 +983,38 @@
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
+            // Loading_Flag_label
+            // 
+            this.Loading_Flag_label.AccessibleRole = System.Windows.Forms.AccessibleRole.IpAddress;
+            this.Loading_Flag_label.AutoSize = true;
+            this.Loading_Flag_label.BackColor = System.Drawing.Color.Transparent;
+            this.Loading_Flag_label.Font = new System.Drawing.Font("Consolas", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.Loading_Flag_label.ImeMode = System.Windows.Forms.ImeMode.NoControl;
+            this.Loading_Flag_label.Location = new System.Drawing.Point(408, 328);
+            this.Loading_Flag_label.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.Loading_Flag_label.Name = "Loading_Flag_label";
+            this.Loading_Flag_label.Size = new System.Drawing.Size(42, 15);
+            this.Loading_Flag_label.TabIndex = 70;
+            this.Loading_Flag_label.Text = "● ● ●";
+            // 
+            // linkLabel1
+            // 
+            this.linkLabel1.AutoSize = true;
+            this.linkLabel1.Location = new System.Drawing.Point(70, 337);
+            this.linkLabel1.Name = "linkLabel1";
+            this.linkLabel1.Size = new System.Drawing.Size(70, 13);
+            this.linkLabel1.TabIndex = 71;
+            this.linkLabel1.TabStop = true;
+            this.linkLabel1.Text = "Open-Source";
+            this.linkLabel1.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel1_LinkClicked);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(472, 361);
+            this.Controls.Add(this.linkLabel1);
+            this.Controls.Add(this.Loading_Flag_label);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.label24);
             this.Controls.Add(this.useProxyCheckBox);
@@ -996,7 +1026,7 @@
             this.Controls.Add(this.label15);
             this.Controls.Add(this.label25);
             this.Controls.Add(this.btnShowGridView);
-            this.Controls.Add(this.country_button);
+            this.Controls.Add(this.Check_IP_button);
             this.Controls.Add(this.PictureBox1);
             this.Controls.Add(this.label23);
             this.Controls.Add(this.ip_label);
@@ -1083,7 +1113,7 @@
         private System.Windows.Forms.Label label23;
         private System.Windows.Forms.Label ip_label;
         private System.Windows.Forms.PictureBox PictureBox1;
-        private System.Windows.Forms.Button country_button;
+        private System.Windows.Forms.Button Check_IP_button;
         private System.Windows.Forms.Label label25;
         private System.Windows.Forms.Label label15;
         private System.Windows.Forms.Label label28;
@@ -1095,6 +1125,8 @@
         private System.Windows.Forms.CheckBox useProxyCheckBox;
         private System.Windows.Forms.Label label24;
         private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Label Loading_Flag_label;
+        private System.Windows.Forms.LinkLabel linkLabel1;
     }
 }
 

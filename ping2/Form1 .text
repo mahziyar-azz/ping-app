@@ -9,8 +9,6 @@ using Newtonsoft.Json.Linq;
 using System.Threading;
 using System.Linq;
 using System.Net;
-using System.Security.Cryptography.X509Certificates;
-using System.Diagnostics;
 
 
 namespace ping2
@@ -23,8 +21,6 @@ namespace ping2
         private bool load = false;
         private CancellationTokenSource cancellationTokenSource;
         private CancellationTokenSource cancellationTokenError;
-        private CancellationTokenSource canceltheloadingFLAG;
-
 
         private System.Windows.Forms.Timer pingTimer;
         private int countdown = 6; // Countdown in seconds
@@ -171,7 +167,7 @@ namespace ping2
                     dataGridViewForm.AddRow(logEntryId++.ToString(), ip, country, currentTime);
 
                     // Fetch and display flag
-                    string flagUrl = $"https://flagcdn.com/w40/{countryCode.ToLower()}.jpg";
+                    string flagUrl = $"https://flagcdn.com/w40/{countryCode.ToLower()}.png";
                     await LoadFlagAsync(flagUrl);
                 }
             }
@@ -219,8 +215,6 @@ namespace ping2
                     byte[] imageBytes = await client.GetByteArrayAsync(flagUrl);
                     using (MemoryStream ms = new MemoryStream(imageBytes))
                     {
-                        canceltheloadingFLAG.Cancel();
-                        Loading_Flag_label.Visible = false;
                         PictureBox1.Image?.Dispose();
                         PictureBox1.Image = Image.FromStream(ms);
                     }
@@ -370,72 +364,20 @@ namespace ping2
 
         private async void Check_IP_button_Click(object sender, EventArgs e)
         {
-            PictureBox1.Image = null;
-            Loading_Flag_label.Visible = true;
-
             // Cancel any previous loading animation and initialize a new token
             cancellationTokenSource?.Cancel();
             cancellationTokenSource = new CancellationTokenSource();
-            canceltheloadingFLAG = new CancellationTokenSource();
 
-
-
+            PictureBox1.Image = Properties.Resources.loading2;
+            //load = true;
             // Start the loading animation in parallel
             var loadingTask = UpdateLoadingText(cancellationTokenSource.Token);
 
-            var loadingTask2 = UpdateLoadingTextFLAG(canceltheloadingFLAG.Token);
-
-            async Task UpdateLoadingText(CancellationToken token)
-            {
-                try
-                {
-                    string[] dots = { ".", "..", "...", "...." };
-                    while (!token.IsCancellationRequested)
-                    {
-                        foreach (string dot in dots)
-                        {
-                            if (token.IsCancellationRequested) break;
-
-                            ip_label.Text = $"Loading{dot}";
-                            Country_label.Text = $"Loading{dot}";
-                            continent_label.Text = $"Loading{dot}";
-                            isp_label.Text = $"Loading{dot}";
-
-                            await Task.Delay(300);
-                        }
-                    }
-                }
-                catch (OperationCanceledException)
-                {
-                    MessageBox.Show($" Unknown ERROR \nthe system can't run -loading- animation ", "Error Update the -Loading- Text ", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-            }
             // Fetch the IP, country, and flag
             await FetchIPCountryAndFlagAsync();
         }
 
-        async Task UpdateLoadingTextFLAG(CancellationToken token)
-        {
-            try
-            {
-                string[] dots = { "●", "● ●", "● ● ●",};
-                while (!token.IsCancellationRequested)
-                {
-                    foreach (string dot in dots)
-                    {
-                        if (token.IsCancellationRequested) break;
 
-                        Loading_Flag_label.Text = $"{dot}";
-
-                        await Task.Delay(300);
-                    }
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                MessageBox.Show($" Unknown ERROR \nthe system can't run -loading- animation ", "Error Update the -Loading- Text ", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
 
         private async Task UpdateLoadingText(CancellationToken token)
         {
@@ -536,14 +478,6 @@ namespace ping2
             Run_Ping(sender, e);
         }
 
-        private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
-        {
-            System.Diagnostics.Process.Start(new ProcessStartInfo
-            {
-                FileName = "https://github.com/mahziyar-azz/ping-app",
-                UseShellExecute = true
-            });
-
-        }
+        
     }
 }
