@@ -1,70 +1,61 @@
-﻿using System;
-using System.IO;
+using System;
+using System.Diagnostics;
+using System.Drawing;
+using System.Linq;
 using System.Net.NetworkInformation;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Drawing;
-using System.Net.Http;
-using Newtonsoft.Json.Linq;
-using System.Threading;
-using System.Linq;
-using System.Net;
-using System.Security.Cryptography.X509Certificates;
-using System.Diagnostics;
-
 
 namespace ping2
 {
-
-
     public partial class Form1 : Form
     {
-        private DataGridViewForm dataGridViewForm;
-        private bool load = false;
-        private CancellationTokenSource cancellationTokenSource;
-        private CancellationTokenSource cancellationTokenError;
-        private CancellationTokenSource canceltheloadingFLAG;
+        public class UrlLabelTarget
+        {
+            public string Url { get; set; }
+            public Label Label { get; set; }
 
+            public UrlLabelTarget(string url, Label label)
+            {
+                Url = url;
+                Label = label;
+            }
+        }
+        private DataGridViewForm dataGridViewForm;
 
         private System.Windows.Forms.Timer pingTimer;
-        private int countdown = 6; // Countdown in seconds
-        private bool isTimerRunning = false;  // Track whether the timer is running
-        private bool First_time = true;  // Track whether the timer is running
-
-        DataGridView dataGridView1 = new DataGridView();
-
+        private int countdown = 6;
+        private bool isTimerRunning = false;
+        private bool First_time = true;
 
         public Form1()
         {
             InitializeComponent();
 
             dataGridViewForm = new DataGridViewForm();
+            logEntryId = dataGridViewForm.GetNextLogEntryId();
 
-            // Initialize and configure the timer
             pingTimer = new System.Windows.Forms.Timer();
-            pingTimer.Interval = 1000; // 5 minute in milliseconds
+            pingTimer.Interval = 1000;
             pingTimer.Tick += PingTimer_Tick;
-            //pingTimer.Start(); // Start the timer
-
 
             ToolTip toolTip = new ToolTip();
             toolTip.SetToolTip(useProxyCheckBox, "Use system proxy for Pinging!\nNot recommended: some URLs not allow the HTTP response time.");
         }
+
         private void PingTimer_Tick(object sender, EventArgs e)
         {
-            // Decrease the countdown
             countdown--;
+            countdownLabel.Text = countdown.ToString();
 
-            // Update the countdownLabel text
-            countdownLabel.Text = $"{countdown}";
-
-            // If countdown reaches zero, reset and execute the ping logic
             if (countdown <= 0)
             {
-                countdown = 6; // Reset countdown for the next minute
+                countdown = 6;
                 Run_Ping(sender, e);
             }
         }
+
         private void Run_Ping(object sender, EventArgs e)
         {
             normal_button_Click(sender, e);
@@ -73,187 +64,128 @@ namespace ping2
             Check_IP_button_Click(sender, e);
         }
 
-        private async void Form1_Load(object sender, EventArgs e)
+        private void Form1_Load(object sender, EventArgs e)
         {
-            //Run_Ping(sender, e);
-            //pingTimer.Start();
-            //await FetchIPCountryAndFlagAsync();
-
             Check_IP_button_Click(sender, e);
-
-
-            //20:16
-
-        }
-        private async Task<(bool Success, long RoundtripTime)> HttpPingAsync(string url)
-        {
-            try
-            {
-                // Add "http://" if the URL doesn't have a protocol
-                if (!url.StartsWith("http://") && !url.StartsWith("https://"))
-                {
-                    url = "http://" + url;
-                }
-
-                var handler = new HttpClientHandler
-                {
-                    UseProxy = true, // Use system proxy since checkbox is checked
-                    Proxy = null     // null means use the system default proxy
-                };
-
-                using (HttpClient client = new HttpClient(handler))
-                {
-                    client.Timeout = TimeSpan.FromSeconds(10);
-                    var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-
-                    // Use HEAD request for a lightweight ping
-                    HttpResponseMessage response = await client.SendAsync(new HttpRequestMessage(HttpMethod.Head, url));
-                    stopwatch.Stop();
-
-                    if (response.IsSuccessStatusCode)
-                    {
-                        return (true, stopwatch.ElapsedMilliseconds);
-                    }
-                    else
-                    {
-                        return (false, 0);
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                // Silently return failure without notification
-                return (false, 0);
-            }
         }
 
         private int logEntryId = 1;
+        private CancellationTokenSource ipLoadingCts;
+        private CancellationTokenSource flagLoadingCts;
+
         private async Task FetchIPCountryAndFlagAsync()
         {
+            // Cancel any running animations / requests
+            StopAllLoading();
+
+            ipLoadingCts = new CancellationTokenSource();
+            flagLoadingCts = new CancellationTokenSource();
+
+            CancellationToken ipToken = ipLoadingCts.Token;
+            CancellationToken flagToken = flagLoadingCts.Token;
+
+            PictureBox1.Image = null;
+            Loading_Flag_label.Visible = true;
+
+            // Start loading animation tasks in parallel
+            Task anim1 = UpdateLoadingText(ipToken);
+            Task anim2 = UpdateLoadingTextFLAG(flagToken);
+
             try
             {
                 if (!NetworkInterface.GetIsNetworkAvailable())
                 {
-                    pingTimer.Stop();
-                    Stop_the_timer.Text = "Start timer";
-                    Stop_the_timer.ForeColor = Color.Green;
-
-                    //MessageBox.Show("No internet connection. Please connect to the internet and try again.", "No connection", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    Notifier.ShowNotification("No connection", "No internet connection. Please connect to the internet and try again.");
-                    pingTimer.Stop();
+                    StopAllLoading();
+                    Notifier.ShowNotification("No connection", "No internet connection detected.");
                     return;
                 }
 
-                string apiUrl = "http://ip-api.com/json/";
-                using (HttpClient client = new HttpClient())
+                GeoIpResult geo = await NetworkProbeService.FetchGeoIpAsync();
+
+                if (ipToken.IsCancellationRequested)
                 {
-                    string json = await client.GetStringAsync(apiUrl);
-                    JObject obj = JObject.Parse(json);
-                    //load = false;
-                    cancellationTokenSource.Cancel();
-                    // Extract data
-                    string ip = obj["query"]?.ToString();
-                    string country = obj["country"]?.ToString();
-                    string countryCode = obj["countryCode"]?.ToString();
-                    string continent = obj["timezone"]?.ToString();
-                    string isp = obj["isp"]?.ToString();
-                    continent = ExtractContinentFromTimezone(continent);
-
-                    // Update Labels
-                    ip_label.Text = $"{ip}";
-                    Country_label.Text = $"{country}";
-                    continent_label.Text = $"{continent}";
-                    isp_label.Text = $"{isp}";
-
-                    // add to dataGridView1 Here :
-
-                    var currentTime = DateTime.Now.ToString("HH:mm:ss"); // Get the current hour and minute
-                    dataGridViewForm.AddRow(logEntryId++.ToString(), ip, country, currentTime);
-
-                    // Fetch and display flag
-                    string flagUrl = $"https://flagcdn.com/w40/{countryCode.ToLower()}.jpg";
-                    await LoadFlagAsync(flagUrl);
+                    return;
                 }
+
+                // STOP text animation immediately BEFORE updating labels with the real IP details
+                StopIpTextAnimation();
+
+                // Update Labels with fetched data
+                ip_label.Text = geo.Ip;
+                Country_label.Text = geo.Country;
+                continent_label.Text = geo.Continent;
+                isp_label.Text = geo.Isp;
+
+                // Add to history
+                string currentTime = DateTime.Now.ToString("HH:mm:ss");
+                dataGridViewForm.AddRow(logEntryId++.ToString(), geo.Ip, geo.Country, currentTime);
+
+                // Fetch and display flag
+                await LoadFlagAsync(geo.CountryCode, flagToken);
             }
             catch (Exception ex)
             {
-                load = false;
-                cancellationTokenSource.Cancel();
+                StopAllLoading();
                 ip_label.Text = "Null";
                 Country_label.Text = "Null";
                 continent_label.Text = "Null";
                 isp_label.Text = "Null";
                 PictureBox1.Image = null;
-                pingTimer.Stop();
-                Stop_the_timer.Text = "Start timer";
-                Stop_the_timer.ForeColor = Color.Green;
-                MessageBox.Show($"Error fetching data: \n{ex.Message}", "IP Fetch issue", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-        private string ExtractContinentFromTimezone(string timezone)
-        {
-            // Check if the timezone contains a "/"
-            if (timezone.Contains("/"))
-            {
-                // Split by "/" and return the first part
-                return timezone.Split('/')[0];
-            }
-            else if (string.IsNullOrEmpty(timezone))
-            {
-                return "Unknown";
-            }
-            else
-            {
-                // Return "Unknown" if no "/" is found
-                return "Unknown";
+                Notifier.ShowNotification("IP Fetch Issue", ex.Message);
             }
         }
 
-
-        private async Task LoadFlagAsync(string flagUrl)
+        private async Task LoadFlagAsync(string countryCode, CancellationToken token)
         {
             try
             {
-                using (HttpClient client = new HttpClient())
+                Image flagImage = await NetworkProbeService.FetchFlagAsync(countryCode);
+                
+                if (token.IsCancellationRequested)
                 {
-                    byte[] imageBytes = await client.GetByteArrayAsync(flagUrl);
-                    using (MemoryStream ms = new MemoryStream(imageBytes))
+                    if (flagImage != null)
                     {
-                        canceltheloadingFLAG.Cancel();
-                        Loading_Flag_label.Visible = false;
-                        PictureBox1.Image?.Dispose();
-                        PictureBox1.Image = Image.FromStream(ms);
+                        flagImage.Dispose();
                     }
+                    return;
                 }
+
+                StopFlagAnimation();
+
+                if (PictureBox1.Image != null)
+                {
+                    PictureBox1.Image.Dispose();
+                }
+                PictureBox1.Image = flagImage;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                pingTimer.Stop();
-                Stop_the_timer.Text = "Start timer";
-                Stop_the_timer.ForeColor = Color.Green;
-                MessageBox.Show($"Error loading flag: \n{ex.Message}", "Load Flag issue", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                StopFlagAnimation();
+                PictureBox1.Image = null;
             }
         }
 
-
-        private async Task<PingReply> PingUrlAsync(string url)
+        private void StopIpTextAnimation()
         {
-            using (Ping ping = new Ping())
+            if (ipLoadingCts != null && !ipLoadingCts.IsCancellationRequested)
             {
-                try
-                {
-                    // Send an asynchronous ping request to the specified URL
-                    return await ping.SendPingAsync(url);
-                }
-                catch (Exception ex)
-                {
-                    pingTimer.Stop();
-                    Stop_the_timer.Text = "Start timer";
-                    Stop_the_timer.ForeColor = Color.Green;
-                    Notifier.ShowNotification($"Error pinging {url}", ex.Message);
-                    return null;
-                }
+                ipLoadingCts.Cancel();
             }
+        }
+
+        private void StopFlagAnimation()
+        {
+            if (flagLoadingCts != null && !flagLoadingCts.IsCancellationRequested)
+            {
+                flagLoadingCts.Cancel();
+            }
+            Loading_Flag_label.Visible = false;
+        }
+
+        private void StopAllLoading()
+        {
+            StopIpTextAnimation();
+            StopFlagAnimation();
         }
 
         private void SetLabelStatus(Label[] labels, string text, Color color)
@@ -265,215 +197,136 @@ namespace ping2
             }
         }
 
-        private async Task PingAndUpdateLabels((string Url, Label Label)[] urlLabelPairs)
+        private async Task PingAndUpdateLabels(UrlLabelTarget[] targets)
         {
-            var tasks = urlLabelPairs.Select(async pair =>
+            bool useHttp = useProxyCheckBox.Checked;
+
+            var tasks = targets.Select(async target =>
             {
-                if (useProxyCheckBox.Checked)
-                {
-                    // Use HTTP ping with system proxy when checkbox is checked
-                    var (success, roundtripTime) = await HttpPingAsync(pair.Url);
-                    if (success)
-                    {
-                        pair.Label.Text = $"Http time: {roundtripTime} ms";
-                        pair.Label.ForeColor = Color.Green;
-                    }
-                    else
-                    {
-                        pair.Label.Text = "Http Failed❌";
-                        pair.Label.ForeColor = Color.Red;
-                    }
-                }
-                else
-                {
-                    // Use ICMP ping when checkbox is not checked
-                    PingReply reply = await PingUrlAsync(pair.Url);
-                    if (reply != null && reply.Status == IPStatus.Success)
-                    {
-                        pair.Label.Text = $"Ping time: {reply.RoundtripTime} ms";
-                        pair.Label.ForeColor = Color.Green;
-                    }
-                    else
-                    {
-                        pair.Label.Text = "Ping Failed❌";
-                        pair.Label.ForeColor = Color.Red;
-                    }
-                }
+                ProbeResult result = await NetworkProbeService.ProbeEndpointAsync(target.Url, useHttp);
+                target.Label.Text = result.Message;
+                target.Label.ForeColor = result.StatusColor;
             }).ToArray();
 
             await Task.WhenAll(tasks);
         }
 
-        // Helper method to detect IP addresses
-        private bool IsIpAddress(string url)
+        private void normal_button_Click(object sender, EventArgs e)
         {
-            return System.Net.IPAddress.TryParse(url, out _);
-        }
-
-        private async void normal_button_Click(object sender, EventArgs e)
-        {
-            var labels = new[] { google_res, myip_res, yandex_res, aparat_res, speedtest_res, divar_res };
+            Label[] labels = new[] { google_res, myip_res, yandex_res, aparat_res, speedtest_res, divar_res };
             SetLabelStatus(labels, "<Pinging...>", Color.Black);
 
-            var urlLabelPairs = new (string Url, Label Label)[]
+            UrlLabelTarget[] targets = new[]
             {
-                ("whatismyipaddress.com", myip_res),
-                ("google.com", google_res),
-                ("speedtest.net", speedtest_res),
-                ("divar.ir", divar_res),
-                ("yandex.com", yandex_res),
-                ("aparat.com", aparat_res)
+                new UrlLabelTarget("whatismyipaddress.com", myip_res),
+                new UrlLabelTarget("google.com", google_res),
+                new UrlLabelTarget("speedtest.net", speedtest_res),
+                new UrlLabelTarget("divar.ir", divar_res),
+                new UrlLabelTarget("yandex.com", yandex_res),
+                new UrlLabelTarget("aparat.com", aparat_res)
             };
 
-            await PingAndUpdateLabels(urlLabelPairs);
+            Task ignored = PingAndUpdateLabels(targets);
         }
 
-        private async void Tahrim_button_Click(object sender, EventArgs e)
+        private void Tahrim_button_Click(object sender, EventArgs e)
         {
-            var labels = new[] { openai_res, amd_res, apps_microsoft_res, microsoft_res, deepai_res, cloudflare_res, adobe_res };
+            Label[] labels = new[] { openai_res, amd_res, apps_microsoft_res, microsoft_res, deepai_res, cloudflare_res, adobe_res };
             SetLabelStatus(labels, "<Pinging...>", Color.Black);
 
-            var urlLabelPairs = new (string Url, Label Label)[]
+            UrlLabelTarget[] targets = new[]
             {
-                ("openai.com", openai_res),
-                ("amd.com", amd_res),
-                ("apps.microsoft.com", apps_microsoft_res),
-                ("microsoft.com", microsoft_res),
-                ("deepai.org", deepai_res),
-                ("cloudflare.com", cloudflare_res),
-                ("adobe.com", adobe_res)
+                new UrlLabelTarget("openai.com", openai_res),
+                new UrlLabelTarget("amd.com", amd_res),
+                new UrlLabelTarget("apps.microsoft.com", apps_microsoft_res),
+                new UrlLabelTarget("microsoft.com", microsoft_res),
+                new UrlLabelTarget("claude.ai", deepai_res),
+                new UrlLabelTarget("cloudflare.com", cloudflare_res),
+                new UrlLabelTarget("adobe.com", adobe_res)
             };
 
-            await PingAndUpdateLabels(urlLabelPairs);
+            Task ignored = PingAndUpdateLabels(targets);
         }
 
-        private async void filter_button_Click(object sender, EventArgs e)
+        private void filter_button_Click(object sender, EventArgs e)
         {
-            var labels = new[] { usa_res, cnn_res, bbc_res, youtube_res, reddit_res, instagram_res, telegram_res, p_res };
+            Label[] labels = new[] { usa_res, cnn_res, bbc_res, youtube_res, reddit_res, instagram_res, telegram_res, p_res };
             SetLabelStatus(labels, "<Pinging...>", Color.Black);
 
-            var urlLabelPairs = new (string Url, Label Label)[]
+            UrlLabelTarget[] targets = new[]
             {
-                ("4.4.4.4", usa_res),
-                ("edition.cnn.com", cnn_res),
-                ("bbc.com", bbc_res),
-                ("youtube.com", youtube_res),
-                ("reddit.com", reddit_res),
-                ("instagram.com", instagram_res),
-                ("telegram.org", telegram_res),
-                ("pornhub.com", p_res) // Changed the NSFW site
-                
+                new UrlLabelTarget("4.4.4.4", usa_res),
+                new UrlLabelTarget("edition.cnn.com", cnn_res),
+                new UrlLabelTarget("bbc.com", bbc_res),
+                new UrlLabelTarget("youtube.com", youtube_res),
+                new UrlLabelTarget("reddit.com", reddit_res),
+                new UrlLabelTarget("instagram.com", instagram_res),
+                new UrlLabelTarget("telegram.org", telegram_res),
+                new UrlLabelTarget("pornhub.com", p_res)
             };
 
-            await PingAndUpdateLabels(urlLabelPairs);
+            Task ignored = PingAndUpdateLabels(targets);
         }
 
         private async void Check_IP_button_Click(object sender, EventArgs e)
         {
-            PictureBox1.Image = null;
-            Loading_Flag_label.Visible = true;
-
-            // Cancel any previous loading animation and initialize a new token
-            cancellationTokenSource?.Cancel();
-            cancellationTokenSource = new CancellationTokenSource();
-            canceltheloadingFLAG = new CancellationTokenSource();
-
-
-
-            // Start the loading animation in parallel
-            var loadingTask = UpdateLoadingText(cancellationTokenSource.Token);
-
-            var loadingTask2 = UpdateLoadingTextFLAG(canceltheloadingFLAG.Token);
-
-            async Task UpdateLoadingText(CancellationToken token)
-            {
-                try
-                {
-                    string[] dots = { ".", "..", "...", "...." };
-                    while (!token.IsCancellationRequested)
-                    {
-                        foreach (string dot in dots)
-                        {
-                            if (token.IsCancellationRequested) break;
-
-                            ip_label.Text = $"Loading{dot}";
-                            Country_label.Text = $"Loading{dot}";
-                            continent_label.Text = $"Loading{dot}";
-                            isp_label.Text = $"Loading{dot}";
-
-                            await Task.Delay(300);
-                        }
-                    }
-                }
-                catch (OperationCanceledException)
-                {
-                    MessageBox.Show($" Unknown ERROR \nthe system can't run -loading- animation ", "Error Update the -Loading- Text ", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-            }
-            // Fetch the IP, country, and flag
             await FetchIPCountryAndFlagAsync();
-        }
-
-        async Task UpdateLoadingTextFLAG(CancellationToken token)
-        {
-            try
-            {
-                string[] dots = { "●", "● ●", "● ● ●",};
-                while (!token.IsCancellationRequested)
-                {
-                    foreach (string dot in dots)
-                    {
-                        if (token.IsCancellationRequested) break;
-
-                        Loading_Flag_label.Text = $"{dot}";
-
-                        await Task.Delay(300);
-                    }
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                MessageBox.Show($" Unknown ERROR \nthe system can't run -loading- animation ", "Error Update the -Loading- Text ", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
         }
 
         private async Task UpdateLoadingText(CancellationToken token)
         {
             try
             {
-                string[] dots = { "", ".", "..", "..." };
+                string[] dots = new[] { "", ".", "..", "..." };
                 while (!token.IsCancellationRequested)
                 {
                     foreach (string dot in dots)
                     {
-                        if (token.IsCancellationRequested) break;
+                        if (token.IsCancellationRequested) return;
 
-                        ip_label.Text = $"Loading{dot}";
-                        Country_label.Text = $"Loading{dot}";
-                        continent_label.Text = $"Loading{dot}";
-                        isp_label.Text = $"Loading{dot}";
+                        ip_label.Text = "Loading" + dot;
+                        Country_label.Text = "Loading" + dot;
+                        continent_label.Text = "Loading" + dot;
+                        isp_label.Text = "Loading" + dot;
 
-                        await Task.Delay(300);
+                        await Task.Delay(300, token);
                     }
                 }
             }
             catch (OperationCanceledException)
             {
-                // Expected exception when task is canceled
             }
         }
 
+        private async Task UpdateLoadingTextFLAG(CancellationToken token)
+        {
+            try
+            {
+                string[] dots = new[] { "\u25CF", "\u25CF \u25CF", "\u25CF \u25CF \u25CF" };
+                while (!token.IsCancellationRequested)
+                {
+                    foreach (string dot in dots)
+                    {
+                        if (token.IsCancellationRequested) return;
+
+                        Loading_Flag_label.Text = dot;
+                        await Task.Delay(300, token);
+                    }
+                }
+            }
+            catch (OperationCanceledException)
+            {
+            }
+        }
 
         private void Stop_the_timer_Click(object sender, EventArgs e)
         {
             if (isTimerRunning)
             {
-                // Stop the timer
                 pingTimer.Stop();
                 Stop_the_timer.Text = "Start timer";
                 Stop_the_timer.ForeColor = Color.Green;
-
-                isTimerRunning = false;  // Update the flag
+                isTimerRunning = false;
             }
             else
             {
@@ -482,14 +335,13 @@ namespace ping2
                     Run_Ping(sender, e);
                     First_time = false;
                 }
-                // Start the timer
                 pingTimer.Start();
                 Stop_the_timer.Text = "Stop timer";
                 Stop_the_timer.ForeColor = Color.Red;
-
-                isTimerRunning = true;  // Update the flag
+                isTimerRunning = true;
             }
         }
+
         public static class Notifier
         {
             public static void ShowNotification(string title, string text, int duration = 3000)
@@ -497,34 +349,24 @@ namespace ping2
                 using (NotifyIcon notifyIcon = new NotifyIcon())
                 {
                     notifyIcon.Visible = true;
-                    notifyIcon.Icon = Properties.Resources.icon_ping_app; // Custom icon path
+                    notifyIcon.Icon = Properties.Resources.icon_ping_app;
                     notifyIcon.BalloonTipTitle = title;
                     notifyIcon.BalloonTipText = text;
                     notifyIcon.ShowBalloonTip(duration);
-
-                    // Optional: To keep the notification visible until a key is pressed (for debugging purposes)
-                    // Console.WriteLine("Notification shown. Press any key to exit...");
-                    // Console.ReadKey();
-
-                    // No need to dispose explicitly as using statement takes care of it
                 }
             }
         }
 
         private void btnShowGridView_Click(object sender, EventArgs e)
         {
-            // Check if the dataGridViewForm is already visible
             if (dataGridViewForm.Visible)
             {
-
-                // If it is visible, hide it
                 dataGridViewForm.Hide();
                 btnShowGridView.ForeColor = Color.Black;
                 btnShowGridView.Text = "Show History";
             }
             else
             {
-                // If it is not visible, show it
                 dataGridViewForm.Show();
                 btnShowGridView.ForeColor = Color.Red;
                 btnShowGridView.Text = "Hide History";
@@ -538,12 +380,11 @@ namespace ping2
 
         private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            System.Diagnostics.Process.Start(new ProcessStartInfo
+            Process.Start(new ProcessStartInfo
             {
                 FileName = "https://github.com/mahziyar-azz/ping-app",
                 UseShellExecute = true
             });
-
         }
     }
 }

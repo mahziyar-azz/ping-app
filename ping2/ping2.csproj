@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -94,6 +94,7 @@
     <Compile Include="DataGridViewForm.Designer.cs">
       <DependentUpon>DataGridViewForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="NetworkProbeService.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Form1.resx">
@@ -130,6 +131,7 @@
   <ItemGroup>
     <EmbeddedResource Include="icon ping app.ico" />
     <EmbeddedResource Include="Newtonsoft.Json.dll" />
+    <EmbeddedResource Include="Resources\flags\*.png" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.7.2">
