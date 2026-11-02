@@ -1,0 +1,385 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:PingApp.ViewModels"
+        xmlns:models="using:PingApp.Models"
+        x:Class="PingApp.Views.MainWindow"
+        x:DataType="vm:MainViewModel"
+        Title="Iranian Internet &amp; Censorship Monitor (.NET 10)"
+        Width="1140" Height="800"
+        MinWidth="900" MinHeight="620"
+        WindowStartupLocation="CenterScreen"
+        Icon="avares://PingApp/Assets/icon.ico">
+
+    <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" Margin="18">
+
+        <!-- Header Bar -->
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,14">
+            <StackPanel Grid.Column="0" Spacing="4">
+                <TextBlock Text="Iranian Internet &amp; Censorship Monitor"
+                           FontSize="20" FontWeight="SemiBold"
+                           Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+                <TextBlock Text="High-precision burst probing &amp; censorship fingerprinting for Linux and Windows"
+                           FontSize="12"
+                           Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+            </StackPanel>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                <Border Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}"
+                        CornerRadius="4" Padding="8,4">
+                    <TextBlock Text=".NET 10 + Avalonia" FontSize="11" FontWeight="Medium"
+                               Foreground="{DynamicResource SystemControlForegroundBaseMediumHighBrush}"/>
+                </Border>
+                <Button Content="GitHub Repository"
+                        Command="{Binding OpenProjectUrlCommand}"
+                        Padding="12,6"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- GeoIP & Network Identity Card -->
+        <Border Grid.Row="1"
+                Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
+                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="16"
+                Margin="0,0,0,14">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <!-- Country Flag -->
+                <Border Grid.Column="0"
+                        Width="56" Height="38"
+                        CornerRadius="4"
+                        ClipToBounds="True"
+                        BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                        BorderThickness="1"
+                        Margin="0,0,16,0"
+                        VerticalAlignment="Center">
+                    <Panel>
+                        <Image Source="{Binding FlagImage}" Stretch="UniformToFill"/>
+                        <TextBlock Text="FLAG"
+                                   FontSize="10"
+                                   Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   IsVisible="{Binding FlagImage, Converter={x:Static ObjectConverters.IsNull}}"/>
+                    </Panel>
+                </Border>
+
+                <!-- Identity Details -->
+                <Grid Grid.Column="1" ColumnDefinitions="Auto,Auto,Auto,*" RowDefinitions="Auto,Auto" VerticalAlignment="Center">
+                    <!-- Column 0: IP -->
+                    <StackPanel Grid.Column="0" Grid.Row="0" Grid.RowSpan="2" Margin="0,0,24,0" Spacing="2">
+                        <TextBlock Text="PUBLIC IP" FontSize="10" FontWeight="Bold"
+                                   Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+                        <TextBlock Text="{Binding Ip}" FontSize="15" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+                    </StackPanel>
+
+                    <!-- Column 1: Country -->
+                    <StackPanel Grid.Column="1" Grid.Row="0" Grid.RowSpan="2" Margin="0,0,24,0" Spacing="2">
+                        <TextBlock Text="COUNTRY" FontSize="10" FontWeight="Bold"
+                                   Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+                        <TextBlock Text="{Binding Country}" FontSize="13"
+                                   Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+                    </StackPanel>
+
+                    <!-- Column 2: Continent -->
+                    <StackPanel Grid.Column="2" Grid.Row="0" Grid.RowSpan="2" Margin="0,0,24,0" Spacing="2">
+                        <TextBlock Text="CONTINENT" FontSize="10" FontWeight="Bold"
+                                   Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+                        <TextBlock Text="{Binding Continent}" FontSize="13"
+                                   Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+                    </StackPanel>
+
+                    <!-- Column 3: ISP -->
+                    <StackPanel Grid.Column="3" Grid.Row="0" Grid.RowSpan="2" Spacing="2">
+                        <TextBlock Text="ISP / PROVIDER" FontSize="10" FontWeight="Bold"
+                                   Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+                        <TextBlock Text="{Binding Isp}" FontSize="13"
+                                   TextTrimming="CharacterEllipsis"
+                                   Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+                    </StackPanel>
+                </Grid>
+
+                <!-- Refresh IP Button -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Spacing="8">
+                    <Button Content="Refresh IP"
+                            Command="{Binding CheckGeoIpCommand}"
+                            IsEnabled="{Binding !IsGeoIpLoading}"
+                            Padding="14,8"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Command & Operation Bar -->
+        <Border Grid.Row="2"
+                Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
+                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="12,10"
+                Margin="0,0,0,14">
+            <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto">
+                <!-- Primary Action: Probe All -->
+                <Button Grid.Column="0"
+                        Content="Probe All Endpoints"
+                        Command="{Binding ProbeAllCommand}"
+                        Background="#1976D2"
+                        Foreground="White"
+                        FontWeight="SemiBold"
+                        Padding="18,8"
+                        Margin="0,0,12,0"/>
+
+                <!-- Auto-Ping Timer -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Spacing="8">
+                    <Button Content="{Binding TimerButtonText}"
+                            Command="{Binding ToggleTimerCommand}"
+                            Padding="14,8"/>
+                    <Border Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}"
+                            CornerRadius="4" Padding="8,6"
+                            IsVisible="{Binding IsTimerRunning}">
+                        <TextBlock Text="{Binding Countdown, StringFormat='{}{0}s'}"
+                                   FontWeight="Bold"
+                                   Foreground="#E65100"/>
+                    </Border>
+                </StackPanel>
+
+                <!-- HTTP Burst Mode CheckBox -->
+                <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,0">
+                    <CheckBox IsChecked="{Binding UseProxyOrHttp}"
+                              VerticalAlignment="Center">
+                        <StackPanel Spacing="1">
+                            <TextBlock Text="HTTP Burst Mode" FontWeight="Medium"/>
+                            <TextBlock Text="Use HTTP HEAD burst instead of ICMP"
+                                       FontSize="10"
+                                       Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+                        </StackPanel>
+                    </CheckBox>
+                </StackPanel>
+
+                <!-- IP History Button -->
+                <Button Grid.Column="4"
+                        Content="IP History Log"
+                        Command="{Binding ToggleHistoryCommand}"
+                        Padding="14,8"/>
+            </Grid>
+        </Border>
+
+        <!-- Main 3-Column Categorized Probing Targets -->
+        <Grid Grid.Row="3" ColumnDefinitions="*,12,*,12,*">
+
+            <!-- Card 1: Domestic / NIN -->
+            <Border Grid.Column="0"
+                    Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
+                    BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="14">
+                <Grid RowDefinitions="Auto,Auto,*">
+                    <DockPanel Grid.Row="0" Margin="0,0,0,4">
+                        <TextBlock Text="Domestic (NIN)"
+                                   FontWeight="SemiBold" FontSize="14"
+                                   VerticalAlignment="Center"/>
+                        <Button Content="Probe"
+                                DockPanel.Dock="Right"
+                                HorizontalAlignment="Right"
+                                Command="{Binding ProbeDomesticCommand}"
+                                Padding="10,4" FontSize="11"/>
+                    </DockPanel>
+                    <TextBlock Grid.Row="1"
+                               Text="Clean IXP routes &amp; domestic intranet"
+                               FontSize="11" Margin="0,0,0,10"
+                               Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+
+                    <ScrollViewer Grid.Row="2">
+                        <ItemsControl ItemsSource="{Binding DomesticTargets}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="models:ProbeTarget">
+                                    <Border BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                                            BorderThickness="0,0,0,1"
+                                            Padding="4,8">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding DisplayTitle}"
+                                                           FontWeight="Medium" FontSize="12"/>
+                                                <TextBlock Text="{Binding HostOrUrl}"
+                                                           FontSize="10"
+                                                           Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+                                            </StackPanel>
+
+                                            <!-- Status / Latency Badge -->
+                                            <Border Grid.Column="1"
+                                                    Background="{Binding StatusColorHex}"
+                                                    CornerRadius="4"
+                                                    Padding="8,3"
+                                                    VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding StatusMessage}"
+                                                           FontSize="11"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="White"/>
+                                            </Border>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!-- Card 2: Sanctions / Tahrim -->
+            <Border Grid.Column="2"
+                    Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
+                    BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="14">
+                <Grid RowDefinitions="Auto,Auto,*">
+                    <DockPanel Grid.Row="0" Margin="0,0,0,4">
+                        <TextBlock Text="Sanctions (Tahrim)"
+                                   FontWeight="SemiBold" FontSize="14"
+                                   VerticalAlignment="Center"/>
+                        <Button Content="Probe"
+                                DockPanel.Dock="Right"
+                                HorizontalAlignment="Right"
+                                Command="{Binding ProbeTahrimCommand}"
+                                Padding="10,4" FontSize="11"/>
+                    </DockPanel>
+                    <TextBlock Grid.Row="1"
+                               Text="Detects foreign 403/451 service bans"
+                               FontSize="11" Margin="0,0,0,10"
+                               Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+
+                    <ScrollViewer Grid.Row="2">
+                        <ItemsControl ItemsSource="{Binding TahrimTargets}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="models:ProbeTarget">
+                                    <Border BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                                            BorderThickness="0,0,0,1"
+                                            Padding="4,8">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding DisplayTitle}"
+                                                           FontWeight="Medium" FontSize="12"/>
+                                                <TextBlock Text="{Binding HostOrUrl}"
+                                                           FontSize="10"
+                                                           Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+                                            </StackPanel>
+
+                                            <!-- Status / Latency Badge -->
+                                            <Border Grid.Column="1"
+                                                    Background="{Binding StatusColorHex}"
+                                                    CornerRadius="4"
+                                                    Padding="8,3"
+                                                    VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding StatusMessage}"
+                                                           FontSize="11"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="White"/>
+                                            </Border>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!-- Card 3: Censored / Filtered -->
+            <Border Grid.Column="4"
+                    Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
+                    BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="14">
+                <Grid RowDefinitions="Auto,Auto,*">
+                    <DockPanel Grid.Row="0" Margin="0,0,0,4">
+                        <TextBlock Text="Filtered (State DPI)"
+                                   FontWeight="SemiBold" FontSize="14"
+                                   VerticalAlignment="Center"/>
+                        <Button Content="Probe"
+                                DockPanel.Dock="Right"
+                                HorizontalAlignment="Right"
+                                Command="{Binding ProbeFilteredCommand}"
+                                Padding="10,4" FontSize="11"/>
+                    </DockPanel>
+                    <TextBlock Grid.Row="1"
+                               Text="Detects packet loss &amp; DPI injection"
+                               FontSize="11" Margin="0,0,0,10"
+                               Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+
+                    <ScrollViewer Grid.Row="2">
+                        <ItemsControl ItemsSource="{Binding FilteredTargets}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="models:ProbeTarget">
+                                    <Border BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                                            BorderThickness="0,0,0,1"
+                                            Padding="4,8">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding DisplayTitle}"
+                                                           FontWeight="Medium" FontSize="12"/>
+                                                <TextBlock Text="{Binding HostOrUrl}"
+                                                           FontSize="10"
+                                                           Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+                                            </StackPanel>
+
+                                            <!-- Status / Latency Badge -->
+                                            <Border Grid.Column="1"
+                                                    Background="{Binding StatusColorHex}"
+                                                    CornerRadius="4"
+                                                    Padding="8,3"
+                                                    VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding StatusMessage}"
+                                                           FontSize="11"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="White"/>
+                                            </Border>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Status / Legend Footer -->
+        <DockPanel Grid.Row="4" Margin="0,12,0,0">
+            <!-- Latency Quality Guide -->
+            <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="14" VerticalAlignment="Center">
+                <TextBlock Text="Latency Tiers:" FontSize="11" FontWeight="Bold"
+                           Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <Border Background="#2E7D32" Width="10" Height="10" CornerRadius="2"/>
+                    <TextBlock Text="&lt; 80ms" FontSize="11"
+                               Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <Border Background="#558B2F" Width="10" Height="10" CornerRadius="2"/>
+                    <TextBlock Text="80-160ms" FontSize="11"
+                               Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <Border Background="#EF6C00" Width="10" Height="10" CornerRadius="2"/>
+                    <TextBlock Text="160-260ms" FontSize="11"
+                               Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <Border Background="#D32F2F" Width="10" Height="10" CornerRadius="2"/>
+                    <TextBlock Text="&gt; 260ms / Impaired" FontSize="11"
+                               Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+                </StackPanel>
+            </StackPanel>
+
+            <!-- Status notification if any -->
+            <TextBlock DockPanel.Dock="Right"
+                       HorizontalAlignment="Right"
+                       Text="{Binding StatusNotification}"
+                       FontSize="11"
+                       Foreground="#D32F2F"
+                       VerticalAlignment="Center"/>
+        </DockPanel>
+    </Grid>
+</Window>

@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/PingApp/PingApp.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/PingApp.Tests/PingApp.Tests.csproj" />
+  </Folder>
+</Solution>
